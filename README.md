@@ -4,6 +4,80 @@ Production-style real-time CCTV monitoring with face detection, recognition, att
 
 **Repository:** [github.com/DzCodeProgrammer/AI-Powered-CCTV-Monitoring-System](https://github.com/DzCodeProgrammer/AI-Powered-CCTV-Monitoring-System)
 
+## Session 5 Status (Complete)
+
+- Webcam support (device index `0`, `1`, …)
+- RTSP IP CCTV support (`rtsp://...`)
+- Live stream page with bounding boxes + confidence %
+- Attendance logging (`attendance` table)
+- Duplicate attendance prevention (`ATTENDANCE_INTERVAL` seconds)
+
+```powershell
+python scripts\verify_session5.py
+```
+
+Configure in `.env`:
+
+```env
+CAMERA_SOURCE=0
+RTSP_URL=rtsp://admin:password@192.168.1.100:554/stream1
+ATTENDANCE_INTERVAL=300
+```
+
+## Session 4 Status (Complete)
+
+- Load all registered faces from database
+- Generate embeddings with DeepFace (Facenet)
+- Live camera recognition at `/dashboard/monitor`
+- Matched name on screen; **Unknown** when no match
+- Detection logging to database + screenshots
+- Rebuild embeddings after new registration
+
+```powershell
+pip install -r requirements.txt
+python scripts\build_embeddings.py
+python scripts\verify_session4.py
+```
+
+Open **Monitor** after login: http://127.0.0.1:8000/dashboard/monitor
+
+## Session 3 Status (Complete)
+
+- Register new person (`/dashboard/register`)
+- Upload face image (JPG, PNG, WEBP — max 5 MB)
+- Image saved to `datasets/` folder
+- Person record stored in `users` table
+- Protected routes (admin session required)
+- User list with photo thumbnails
+
+```powershell
+python scripts\verify_session3.py
+```
+
+## Session 2 Status (Complete)
+
+- Admin login page (`/login`)
+- Session-based authentication (signed cookie)
+- Protected dashboard routes (`/dashboard`, `/dashboard/detections`, `/dashboard/users`)
+- Bootstrap 5 UI with sidebar navigation
+- Default admin seeded from `.env` on first startup
+
+### Admin login
+
+1. Ensure `.env` has `ADMIN_USERNAME` and `ADMIN_PASSWORD` (included in `generate_secrets.py`).
+2. Start the app and open [http://127.0.0.1:8000/login](http://127.0.0.1:8000/login).
+3. Use credentials from `.env`, or create another admin:
+
+```powershell
+python scripts\create_admin.py
+```
+
+Verify authentication:
+
+```powershell
+python scripts\verify_session2.py
+```
+
 ## Session 1 Status (Complete)
 
 - Clean architecture folder structure
@@ -119,10 +193,10 @@ DB_DRIVER=sqlite
 | Session | Focus |
 |---------|-------|
 | **1** | Scaffold, FastAPI, SQLAlchemy, MySQL, health check |
-| **2** | Face recognition, camera stream, register-face API |
-| **3** | Web dashboard (Jinja2 + Bootstrap 5) |
-| **4** | RTSP IP CCTV, unknown face alerts |
-| **5** | Production deployment |
+| **2** | Admin auth, session login, protected dashboard |
+| **3** | Face registration — upload image, save to datasets, store in DB |
+| **4** | Face recognition — DeepFace embeddings, live match, Unknown label |
+| **5** | CCTV monitoring — webcam/RTSP, attendance logging, dedup |
 
 ## License
 

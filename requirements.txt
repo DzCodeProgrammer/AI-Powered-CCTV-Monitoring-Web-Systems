@@ -12,3 +12,21 @@ cryptography==44.0.0
 # Utils
 python-dotenv==1.0.1
 pydantic-settings==2.7.0
+
+# Authentication
+passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
+itsdangerous==2.2.0
+
+# Image processing
+Pillow==11.1.0
+
+# Computer Vision & AI
+opencv-python==4.10.0.84
+deepface==0.0.93
+numpy==1.26.4
+tensorflow==2.18.0
+tf-keras==2.18.0
+
+# Testing (verify scripts)
+httpx==0.28.1

@@ -1,0 +1,106 @@
+{% extends "dashboard/layout.html" %}
+
+{% block page_title %}Live Monitor{% endblock %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="h3 mb-1">CCTV Live Monitor</h1>
+        <p class="text-muted mb-0">Webcam or RTSP stream with face bounding boxes and confidence scores.</p>
+    </div>
+    <form method="post" action="/dashboard/monitor/rebuild-embeddings" class="mb-0">
+        <button type="submit" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-repeat me-1"></i>Rebuild embeddings
+        </button>
+    </form>
+</div>
+
+{% if rebuild_success %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+  Embeddings rebuilt from registered users.
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+{% if camera_switched %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+  Camera source updated.
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+{% if request.query_params.get('error') == 'rtsp' %}
+<div class="alert alert-danger">RTSP URL is required for IP CCTV mode.</div>
+{% endif %}
+{% if request.query_params.get('error') == 'camera' %}
+<div class="alert alert-danger">Could not open the selected camera source.</div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm monitor-card">
+            <div class="card-header bg-white border-0 pb-0">
+                <h2 class="h6 mb-0"><i class="bi bi-broadcast me-1"></i>Live stream</h2>
+            </div>
+            <div class="card-body p-2">
+                <div class="ratio ratio-16x9 bg-dark rounded overflow-hidden">
+                    <img
+                        id="liveFeed"
+                        src="/dashboard/monitor/feed?t={{ request.query_params.get('camera', '') }}"
+                        alt="Live camera feed"
+                        class="monitor-feed"
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h6 text-uppercase text-muted">Camera source</h2>
+                <form method="post" action="/dashboard/monitor/camera" class="small">
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="camera_mode" id="modeWebcam"
+                                   value="webcam" {% if camera_mode != 'rtsp' %}checked{% endif %}>
+                            <label class="form-check-label" for="modeWebcam">Webcam</label>
+                        </div>
+                        <input type="number" min="0" class="form-control form-control-sm mt-1"
+                               name="webcam_index" value="{{ webcam_index }}" placeholder="Device index (0)">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="camera_mode" id="modeRtsp"
+                                   value="rtsp" {% if camera_mode == 'rtsp' %}checked{% endif %}>
+                            <label class="form-check-label" for="modeRtsp">RTSP IP CCTV</label>
+                        </div>
+                        <input type="text" class="form-control form-control-sm mt-1" name="rtsp_url"
+                               value="{{ rtsp_url }}"
+                               placeholder="rtsp://user:pass@ip:554/stream1">
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                        <i class="bi bi-camera-video me-1"></i>Apply camera
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h6 text-uppercase text-muted">Recognition</h2>
+                <ul class="list-unstyled mb-0 small">
+                    <li class="mb-2"><strong>Active source:</strong> {{ camera_source }}</li>
+                    <li class="mb-2"><strong>Model:</strong> {{ face_model }}</li>
+                    <li class="mb-2"><strong>Threshold:</strong> {{ threshold }}</li>
+                    <li class="mb-2"><strong>Registered:</strong> {{ registered_count }}</li>
+                    <li><strong>Attendance cooldown:</strong> {{ attendance_interval }}s</li>
+                </ul>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h2 class="h6 text-uppercase text-muted">Overlay</h2>
+                <p class="mb-2 small"><span class="legend-box legend-known"></span> Green box — name + confidence</p>
+                <p class="mb-0 small"><span class="legend-box legend-unknown"></span> Red box — Unknown + confidence</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

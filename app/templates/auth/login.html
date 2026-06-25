@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Login — {{ app_name }}{% endblock %}
+{% block body_class %}login-page{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-5 col-lg-4">
+            <div class="card shadow-sm border-0 login-card">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-camera-video-fill text-primary fs-1"></i>
+                        <h1 class="h4 mt-3 mb-1">{{ app_name }}</h1>
+                        <p class="text-muted small">Admin sign in</p>
+                    </div>
+
+                    {% if error %}
+                    <div class="alert alert-danger py-2" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ error }}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" action="/login" autocomplete="off">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="username"
+                                name="username"
+                                value="{{ username or '' }}"
+                                required
+                                autofocus
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <input
+                                type="password"
+                                class="form-control"
+                                id="password"
+                                name="password"
+                                required
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Sign in
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

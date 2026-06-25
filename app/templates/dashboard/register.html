@@ -1,0 +1,81 @@
+{% extends "dashboard/layout.html" %}
+
+{% block page_title %}Register Person{% endblock %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-6">
+        <div class="mb-4">
+            <h1 class="h3 mb-1">Register New Person</h1>
+            <p class="text-muted mb-0">Add a face to the recognition dataset.</p>
+        </div>
+
+        {% if success %}
+        <div class="alert alert-success" role="alert">
+            <i class="bi bi-check-circle-fill me-1"></i>{{ success }}
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ error }}
+        </div>
+        {% endif %}
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="post" action="/dashboard/register" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full name</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="name"
+                            name="name"
+                            value="{{ name }}"
+                            placeholder="e.g. John Doe"
+                            maxlength="100"
+                            required
+                        >
+                        <div class="form-text">Must be unique across registered persons.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="image" class="form-label">Face image</label>
+                        <input
+                            type="file"
+                            class="form-control"
+                            id="image"
+                            name="image"
+                            accept="image/jpeg,image/png,image/webp"
+                            required
+                        >
+                        <div class="form-text">JPG, PNG, or WEBP. Max 5 MB. Use a clear front-facing photo.</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus-fill me-1"></i>Register person
+                        </button>
+                        <a href="/dashboard/users" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('image').addEventListener('change', function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const preview = document.getElementById('preview');
+    if (preview) {
+        preview.src = URL.createObjectURL(file);
+        preview.classList.remove('d-none');
+    }
+});
+</script>
+{% endblock %}

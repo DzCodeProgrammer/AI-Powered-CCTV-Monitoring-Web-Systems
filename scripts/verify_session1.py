@@ -33,7 +33,7 @@ def main() -> int:
 
     inspector = inspect(engine)
     tables = sorted(inspector.get_table_names())
-    required = {"users", "detections", "unknown_faces"}
+    required = {"users", "detections", "unknown_faces", "admins"}
     missing = required - set(tables)
 
     print(f"Tables: {tables}")

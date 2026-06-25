@@ -27,6 +27,7 @@ def main() -> None:
         "change-this-to-a-random-secret-key": generate_secret_key(),
         "change-this-mysql-root-password": generate_password(),
         "change-this-cctv-db-password": generate_password(),
+        "change-this-admin-password": generate_password(20),
     }
     for old, new in replacements.items():
         content = content.replace(old, new)

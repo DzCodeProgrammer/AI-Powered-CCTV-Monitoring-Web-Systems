@@ -1,0 +1,72 @@
+{% extends "dashboard/layout.html" %}
+
+{% block page_title %}Overview{% endblock %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Dashboard</h1>
+        <p class="text-muted mb-0">Welcome back, {{ admin.username }}.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small mb-1">Registered Users</p>
+                        <h2 class="h3 mb-0">{{ stats.registered_users }}</h2>
+                    </div>
+                    <span class="stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-people-fill"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small mb-1">Detections</p>
+                        <h2 class="h3 mb-0">{{ stats.detections }}</h2>
+                    </div>
+                    <span class="stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-eye-fill"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted small mb-1">Unknown Faces</p>
+                        <h2 class="h3 mb-0">{{ stats.unknown_faces }}</h2>
+                    </div>
+                    <span class="stat-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-person-exclamation"></i>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body">
+        <h2 class="h5">Session 2 — Authentication</h2>
+        <p class="text-muted mb-0">
+            Face recognition is active. Open the live monitor to detect and identify faces in real time.
+        </p>
+        <a href="/dashboard/monitor" class="btn btn-primary mt-3">
+            <i class="bi bi-camera-video me-1"></i>Open live monitor
+        </a>
+    </div>
+</div>
+{% endblock %}

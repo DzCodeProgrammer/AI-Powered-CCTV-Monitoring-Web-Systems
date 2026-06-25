@@ -34,10 +34,16 @@ class Settings(BaseSettings):
     face_model: str = "Facenet"
     recognition_threshold: float = 0.55
     detection_interval: float = 1.0
+    attendance_interval: float = 300.0
+    rtsp_url: str = ""
 
     dataset_dir: str = "datasets"
     screenshot_dir: str = "screenshots"
     log_dir: str = "logs"
+
+    session_max_age: int = 86400
+    admin_username: str = "admin"
+    admin_password: str = ""
 
     @property
     def resolved_database_url(self) -> str:

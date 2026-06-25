@@ -13,6 +13,7 @@ venv/
 # Database
 database/*.db
 database/*.db-journal
+database/embeddings.pkl
 
 # Runtime data
 logs/*

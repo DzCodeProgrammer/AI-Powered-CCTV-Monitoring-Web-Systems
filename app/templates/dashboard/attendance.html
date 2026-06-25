@@ -1,0 +1,60 @@
+{% extends "dashboard/layout.html" %}
+
+{% block page_title %}Attendance{% endblock %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="h3 mb-1">Attendance Log</h1>
+        <p class="text-muted mb-0">
+            Duplicate entries for the same person are suppressed for {{ attendance_interval }} seconds.
+        </p>
+    </div>
+    <a href="/dashboard/monitor" class="btn btn-outline-primary">
+        <i class="bi bi-camera-video me-1"></i>Live monitor
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Person</th>
+                    <th>Time</th>
+                    <th>Camera</th>
+                    <th>Status</th>
+                    <th>Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if records %}
+                    {% for row in records %}
+                    <tr>
+                        <td>{{ row.id }}</td>
+                        <td class="fw-medium">{{ row.person_name }}</td>
+                        <td>{{ row.detection_time.strftime('%Y-%m-%d %H:%M:%S') if row.detection_time else '-' }}</td>
+                        <td class="text-truncate small" style="max-width: 180px;">{{ row.camera_source }}</td>
+                        <td>
+                            {% if row.status == 'Recognized' %}
+                            <span class="badge text-bg-success">Recognized</span>
+                            {% else %}
+                            <span class="badge text-bg-danger">Unknown</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ '%.0f%%'|format(row.confidence * 100) if row.confidence is not none else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            No attendance records yet. Start the live monitor to begin logging.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
