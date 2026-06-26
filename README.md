@@ -1,294 +1,111 @@
-# AI-Powered CCTV Monitoring System
+# AI-Powered CCTV Monitoring Web System
 
-Production-style real-time CCTV monitoring with face detection, recognition, attendance logging, and a web dashboard.
+Real-time CCTV monitoring with **face detection**, **face recognition**, **attendance logging**, and a **web dashboard**. Built with Python, FastAPI, OpenCV, DeepFace, and MySQL.
 
 **Repository:** [github.com/DzCodeProgrammer/AI-Powered-CCTV-Monitoring-Web-Systems](https://github.com/DzCodeProgrammer/AI-Powered-CCTV-Monitoring-Web-Systems)
 
-## Session 11 Status (Complete)
+---
 
-Optimized for **Intel Core i5 Gen 4 / 8GB RAM / SSD**:
+## Features
 
-| Optimization | Detail |
-|---|---|
-| Frame skip | Process AI every N frames; stream stays smooth |
-| Detection skip | Haar cascade runs less often on downscaled frames |
-| DeepFace throttle | Re-recognize each face every ~2s (not every frame) |
-| Downscale | Detection at 640px, stream at 960px |
-| Face limit | Max 2 DeepFace calls per detection cycle |
+- Live MJPEG stream from **webcam**, **RTSP**, or **Dahua IP CCTV**
+- Colored face bounding boxes (green = recognized, red = unknown, yellow = detecting)
+- Register persons with face photos; automatic embedding rebuild
+- Attendance logging with duplicate prevention
+- Unknown face gallery with cropped screenshots
+- Admin session authentication
+- Optimized for low-end hardware (i5 Gen 4 / 8GB RAM)
+- Centralized `.env` configuration and file-based error logging
 
-Colored bounding boxes (standard face-detection style):
-- **Green** — recognized user + confidence
-- **Red** — unknown face
-- **Yellow** — face detected, recognition pending
-
-```env
-LOW_END_MODE=true
-FRAME_SKIP=2
-RECOGNITION_INTERVAL=2.0
-PROCESS_MAX_WIDTH=640
-STREAM_MAX_WIDTH=960
-```
-
-```powershell
-python scripts\verify_session11.py
-```
-
-## Session 10 Status (Complete)
-
-Centralized error handling with file logging:
-
-| Area | Behavior |
-|------|----------|
-| Camera disconnect | Status overlay on stream, auto-reconnect every 3s, logged to `logs/errors.log` |
-| Database errors | Rollback + safe commits; dashboard falls back to empty stats |
-| Missing face images | Skipped during embedding rebuild with warning in logs |
-| All errors | Written to `logs/app.log` (INFO+) and `logs/errors.log` (ERROR+) |
-
-```powershell
-python scripts\verify_session10.py
-```
-
-## Session 9 Status (Complete)
-
-Centralized configuration via `.env`:
-
-```env
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=cctv_user
-DB_PASSWORD=your_password
-DB_NAME=smart_cctv
-
-CAMERA_SOURCE=dahua
-DAHUA_USERNAME=admin
-DAHUA_PASSWORD=your_dahua_password
-DAHUA_HOST=192.168.100.135
-DAHUA_PORT=554
-```
-
-Verify configuration & security:
-
-```powershell
-python scripts\verify_session9.py
-python scripts\check_config_security.py
-```
-
-**Security:** credentials stay in `.env` only (gitignored). RTSP passwords are masked in UI and `/api/health`.
-
-## Session 7 Status (Complete)
-
-- Unknown face screenshots saved to `screenshots/unknown/`
-- Screenshot path stored in `unknown_faces` table
-- Gallery at `/dashboard/unknown-faces`
-
-## Session 6 Status (Complete)
-
-- Dashboard overview with live statistics
-- Total registered users
-- Today's detections & unknown detections
-- Recent activity table
-- Attendance statistics (today + all-time)
-
-```powershell
-python scripts\verify_session6_7.py
-```
-
-## Session 5 Status (Complete)
-
-- Webcam support (device index `0`, `1`, …)
-- RTSP IP CCTV support (`rtsp://...`)
-- Live stream page with bounding boxes + confidence %
-- Attendance logging (`attendance` table)
-- Duplicate attendance prevention (`ATTENDANCE_INTERVAL` seconds)
-
-```powershell
-python scripts\verify_session5.py
-```
-
-Configure in `.env`:
-
-```env
-CAMERA_SOURCE=0
-RTSP_URL=rtsp://admin:password@192.168.1.100:554/stream1
-ATTENDANCE_INTERVAL=300
-```
-
-## Session 4 Status (Complete)
-
-- Load all registered faces from database
-- Generate embeddings with DeepFace (Facenet)
-- Live camera recognition at `/dashboard/monitor`
-- Matched name on screen; **Unknown** when no match
-- Detection logging to database + screenshots
-- Rebuild embeddings after new registration
-
-```powershell
-pip install -r requirements.txt
-python scripts\build_embeddings.py
-python scripts\verify_session4.py
-```
-
-Open **Monitor** after login: http://127.0.0.1:8000/dashboard/monitor
-
-## Session 3 Status (Complete)
-
-- Register new person (`/dashboard/register`)
-- Upload face image (JPG, PNG, WEBP — max 5 MB)
-- Image saved to `datasets/` folder
-- Person record stored in `users` table
-- Protected routes (admin session required)
-- User list with photo thumbnails
-
-```powershell
-python scripts\verify_session3.py
-```
-
-## Session 2 Status (Complete)
-
-- Admin login page (`/login`)
-- Session-based authentication (signed cookie)
-- Protected dashboard routes (`/dashboard`, `/dashboard/detections`, `/dashboard/users`)
-- Bootstrap 5 UI with sidebar navigation
-- Default admin seeded from `.env` on first startup
-
-### Admin login
-
-1. Ensure `.env` has `ADMIN_USERNAME` and `ADMIN_PASSWORD` (included in `generate_secrets.py`).
-2. Start the app and open [http://127.0.0.1:8000/login](http://127.0.0.1:8000/login).
-3. Use credentials from `.env`, or create another admin:
-
-```powershell
-python scripts\create_admin.py
-```
-
-Verify authentication:
-
-```powershell
-python scripts\verify_session2.py
-```
-
-## Session 1 Status (Complete)
-
-- Clean architecture folder structure
-- FastAPI application skeleton
-- SQLAlchemy ORM models (`users`, `detections`, `unknown_faces`)
-- MySQL database (native or Docker Compose)
-- SQLite fallback (optional)
-- Health check API at `/api/health`
-- Security hardening scripts
-
-## Prerequisites
-
-- Python 3.11+
-- pip
-- MySQL 8.x (native install or Docker Compose)
+---
 
 ## Quick Start
 
-### 1. Clone & setup
-
 ```powershell
-git clone https://github.com/DzCodeProgrammer/AI-Powered-CCTV-Monitoring-System.git
-cd AI-Powered-CCTV-Monitoring-System
+git clone https://github.com/DzCodeProgrammer/AI-Powered-CCTV-Monitoring-Web-Systems.git
+cd AI-Powered-CCTV-Monitoring-Web-Systems
 
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
-```
 
-### 2. Secure configuration
-
-```powershell
 copy .env.example .env
 python scripts\generate_secrets.py
-.\scripts\secure_mysql.ps1
-```
-
-This generates strong `SECRET_KEY`, `MYSQL_ROOT_PASSWORD`, and `DB_PASSWORD` in `.env` (never committed).
-
-### 3. Start MySQL
-
-**Docker:**
-
-```powershell
 docker compose up -d
-docker compose ps
-```
-
-**Native MySQL:** ensure service is running, then run `scripts\secure_mysql.ps1`.
-
-### 4. Run application
-
-```powershell
 python main.py
 ```
 
-Open: [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health)
+Open [http://127.0.0.1:8000/login](http://127.0.0.1:8000/login) and sign in with credentials from `.env`.
 
-Verify database:
+Health check: [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health)
+
+---
+
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [Installation Guide](docs/INSTALLATION.md) | Step-by-step setup on Windows |
+| [Project Structure](docs/PROJECT_STRUCTURE.md) | Folder layout and architecture |
+| [Database Setup](docs/DATABASE.md) | MySQL, SQLite, tables, and migrations |
+| [API Documentation](docs/API.md) | Routes, auth, and response formats |
+| [Deployment Guide](docs/DEPLOYMENT.md) | Production deployment with Nginx and systemd |
+
+Interactive API explorer (Swagger UI): [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Backend | Python 3.11, FastAPI, Uvicorn |
+| Database | MySQL 8.x (SQLite fallback) |
+| ORM | SQLAlchemy 2.x |
+| Face AI | OpenCV (Haar), DeepFace (Facenet) |
+| Frontend | Jinja2, Bootstrap 5 |
+| Auth | Session cookies (Starlette SessionMiddleware) |
+
+---
+
+## Target Hardware
+
+| Component | Minimum |
+|-----------|---------|
+| CPU | Intel Core i5 Gen 4 (or equivalent) |
+| RAM | 8 GB |
+| Storage | 128 GB SSD |
+| OS | Windows 10/11 or Linux |
+
+Enable `LOW_END_MODE=true` in `.env` (default) for best performance on this profile.
+
+---
+
+## Verification Scripts
 
 ```powershell
-python scripts\verify_session1.py
+python scripts\verify_session1.py    # Database & health
+python scripts\verify_session2.py    # Authentication
+python scripts\verify_session9.py  # Configuration
+python scripts\verify_session10.py # Error handling
+python scripts\verify_session11.py # Performance
+python scripts\verify_session12.py # Documentation
+python scripts\check_config_security.py
 ```
+
+---
 
 ## Security
 
-| Practice | Status |
-|----------|--------|
-| `.env` in `.gitignore` | Yes |
-| Strong secrets via `generate_secrets.py` | Yes |
-| MySQL root password set | Via `secure_mysql.ps1` |
-| App binds to `127.0.0.1` by default | Yes |
-| MySQL Docker port bound to localhost | Yes |
-| `DEBUG=false` by default | Yes |
+- `.env` is gitignored — never commit secrets
+- Run `python scripts\generate_secrets.py` for strong passwords
+- RTSP credentials are masked in UI and `/api/health`
+- App binds to `127.0.0.1` by default in development
 
-**Never commit `.env` or real passwords.** Use `.env.example` placeholders only.
+See [Deployment Guide](docs/DEPLOYMENT.md) for HTTPS and production hardening.
 
-## Project Structure
-
-```
-smart-cctv/
-├── app/
-│   ├── api/              # REST routes
-│   ├── services/         # Business logic (Session 2+)
-│   ├── models/           # SQLAlchemy ORM models
-│   ├── database/         # DB connection & session
-│   ├── face_recognition/ # Face processing (Session 2+)
-│   ├── camera/           # Webcam / RTSP (Session 2+)
-│   ├── templates/        # Jinja2 dashboard (Session 3)
-│   ├── static/           # CSS, JS, assets
-│   └── utils/            # Config & helpers
-├── scripts/              # Setup & security helpers
-├── datasets/             # Registered face images
-├── logs/                 # Application logs
-├── screenshots/          # Detection snapshots
-├── docker-compose.yml    # MySQL 8.0 service
-├── main.py               # Entry point
-└── requirements.txt
-```
-
-## Database
-
-Tables (`users`, `detections`, `unknown_faces`) are created automatically on first startup.
-
-### SQLite fallback (optional)
-
-```env
-DB_DRIVER=sqlite
-```
-
-## Roadmap
-
-| Session | Focus |
-|---------|-------|
-| **1** | Scaffold, FastAPI, SQLAlchemy, MySQL, health check |
-| **2** | Admin auth, session login, protected dashboard |
-| **3** | Face registration — upload image, save to datasets, store in DB |
-| **4** | Face recognition — DeepFace embeddings, live match, Unknown label |
-| **5** | CCTV monitoring — webcam/RTSP, attendance logging, dedup |
+---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
-
-Copyright (c) 2026 DzCodeProgrammer
+[MIT License](LICENSE) — Copyright (c) 2026 DzCodeProgrammer
