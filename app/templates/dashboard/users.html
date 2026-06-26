@@ -6,7 +6,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
         <h1 class="h3 mb-1">Registered Users</h1>
-        <p class="text-muted mb-0">Faces enrolled for recognition.</p>
+        <p class="text-muted mb-0">Faces enrolled for recognition. Remove users who have resigned.</p>
     </div>
     <a href="/dashboard/register" class="btn btn-primary">
         <i class="bi bi-person-plus-fill me-1"></i>Register person
@@ -19,6 +19,15 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endif %}
+{% if deleted %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle-fill me-1"></i>User removed. Face embeddings rebuilt.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+{% if delete_error %}
+<div class="alert alert-danger">Could not delete that user. They may have already been removed.</div>
+{% endif %}
 
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
@@ -30,6 +39,7 @@
                     <th>Registered</th>
                     <th>Status</th>
                     <th>Dataset file</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -56,11 +66,19 @@
                             {% endif %}
                         </td>
                         <td class="text-truncate small text-muted" style="max-width: 200px;">{{ filename }}</td>
+                        <td class="text-end">
+                            <form method="post" action="/dashboard/users/{{ user.id }}/delete" class="d-inline mb-0"
+                                  onsubmit="return confirm('Remove {{ user.full_name }}? Their face photo and recognition data will be deleted.');">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash me-1"></i>Delete
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-5">
+                        <td colspan="6" class="text-center text-muted py-5">
                             <i class="bi bi-people display-6 d-block mb-2"></i>
                             No registered users yet.
                             <a href="/dashboard/register" class="d-block mt-2">Register the first person</a>

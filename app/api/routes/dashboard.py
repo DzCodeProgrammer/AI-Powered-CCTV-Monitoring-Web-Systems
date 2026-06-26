@@ -23,6 +23,12 @@ from app.services.dashboard_service import (
     get_recent_activity,
 )
 from app.services.export_service import export_attendance_to_excel, fetch_attendance_records
+from app.services.unknown_face_service import (
+    count_unknown_faces,
+    delete_all_unknown_faces,
+    delete_unknown_face,
+)
+from app.services.user_service import delete_user
 from app.utils.config import get_settings
 from app.utils.templates import templates
 
@@ -119,7 +125,24 @@ async def dashboard_users(
     context = _dashboard_context(request, auth, "users")
     context["users"] = users
     context["registered_id"] = registered
+    context["deleted"] = request.query_params.get("deleted") == "1"
+    context["delete_error"] = request.query_params.get("error") == "delete"
     return templates.TemplateResponse("dashboard/users.html", context)
+
+
+@router.post("/dashboard/users/{user_id}/delete")
+async def delete_registered_user(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    auth = require_admin(request, db)
+    if isinstance(auth, RedirectResponse):
+        return auth
+
+    if not delete_user(db, user_id, settings):
+        return RedirectResponse(url="/dashboard/users?error=delete", status_code=303)
+    return RedirectResponse(url="/dashboard/users?deleted=1", status_code=303)
 
 
 @router.get("/dashboard/attendance")
@@ -198,8 +221,44 @@ async def unknown_faces_gallery(request: Request, db: Session = Depends(get_db))
 
     context = _dashboard_context(request, auth, "unknown_faces")
     context["faces"] = faces
-    context["total"] = len(faces)
+    context["total"] = count_unknown_faces(db)
+    context["deleted"] = request.query_params.get("deleted") == "1"
+    context["deleted_all"] = request.query_params.get("deleted_all") == "1"
+    context["delete_error"] = request.query_params.get("error") == "delete"
     return templates.TemplateResponse("dashboard/unknown_faces.html", context)
+
+
+@router.post("/dashboard/unknown-faces/{face_id}/delete")
+async def delete_unknown_face_item(
+    face_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    auth = require_admin(request, db)
+    if isinstance(auth, RedirectResponse):
+        return auth
+
+    if not delete_unknown_face(db, face_id):
+        return RedirectResponse(
+            url="/dashboard/unknown-faces?error=delete",
+            status_code=303,
+        )
+    return RedirectResponse(url="/dashboard/unknown-faces?deleted=1", status_code=303)
+
+
+@router.post("/dashboard/unknown-faces/delete-all")
+async def delete_all_unknown_face_items(
+    request: Request,
+    db: Session = Depends(get_db),
+) -> RedirectResponse:
+    auth = require_admin(request, db)
+    if isinstance(auth, RedirectResponse):
+        return auth
+
+    removed = delete_all_unknown_faces(db)
+    if removed == 0:
+        return RedirectResponse(url="/dashboard/unknown-faces", status_code=303)
+    return RedirectResponse(url="/dashboard/unknown-faces?deleted_all=1", status_code=303)
 
 
 @router.get("/dashboard/unknown-faces/{face_id}/image")

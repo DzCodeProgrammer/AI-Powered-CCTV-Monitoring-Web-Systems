@@ -8,8 +8,34 @@
         <h1 class="h3 mb-1">Unknown Face Gallery</h1>
         <p class="text-muted mb-0">Screenshots of unrecognized faces captured from CCTV monitoring.</p>
     </div>
-    <span class="badge text-bg-secondary fs-6">{{ total }} shown</span>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge text-bg-secondary fs-6">{{ total }} total</span>
+        {% if faces %}
+        <form method="post" action="/dashboard/unknown-faces/delete-all" class="mb-0"
+              onsubmit="return confirm('Delete ALL unknown face images? This cannot be undone.');">
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-trash me-1"></i>Delete all
+            </button>
+        </form>
+        {% endif %}
+    </div>
 </div>
+
+{% if deleted %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    Unknown face removed from gallery.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+{% if deleted_all %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    All unknown faces cleared from gallery.
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+{% if delete_error %}
+<div class="alert alert-danger">Could not delete that entry. It may have already been removed.</div>
+{% endif %}
 
 {% if faces %}
 <div class="row g-3">
@@ -26,14 +52,20 @@
             </a>
             <div class="card-body p-2">
                 <p class="small mb-1 fw-medium">#{{ face.id }}</p>
-                <p class="small text-muted mb-0">
+                <p class="small text-muted mb-1">
                     {{ face.detected_at.strftime('%Y-%m-%d %H:%M') if face.detected_at else '-' }}
                 </p>
                 {% if face.camera_source %}
-                <p class="small text-muted text-truncate mb-0" title="{{ face.camera_source }}">
+                <p class="small text-muted text-truncate mb-2" title="{{ face.camera_source }}">
                     {{ face.camera_source }}
                 </p>
                 {% endif %}
+                <form method="post" action="/dashboard/unknown-faces/{{ face.id }}/delete" class="mb-0"
+                      onsubmit="return confirm('Delete this unknown face image?');">
+                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                        <i class="bi bi-trash me-1"></i>Delete
+                    </button>
+                </form>
             </div>
         </div>
     </div>

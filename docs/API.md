@@ -106,11 +106,14 @@ All dashboard routes require an active admin session. Unauthenticated requests r
 | GET | `/dashboard` | Overview stats & recent activity |
 | GET | `/dashboard/detections` | Last 50 detections |
 | GET | `/dashboard/users` | Registered users list |
+| POST | `/dashboard/users/{id}/delete` | Remove user, dataset image, rebuild embeddings |
 | GET | `/dashboard/attendance` | Attendance log (last 100) |
 | GET | `/dashboard/attendance/export/preview` | Export page with date filters |
 | GET | `/dashboard/attendance/export` | Download `.xlsx` file |
 | GET | `/dashboard/unknown-faces` | Unknown face gallery |
 | GET | `/dashboard/unknown-faces/{id}/image` | Serve unknown face crop |
+| POST | `/dashboard/unknown-faces/{id}/delete` | Delete one gallery entry + file |
+| POST | `/dashboard/unknown-faces/delete-all` | Clear entire gallery |
 | GET | `/dashboard/register` | Registration form |
 | GET | `/dashboard/monitor` | Live monitor page |
 
