@@ -9,6 +9,7 @@ import numpy as np
 from sqlalchemy.orm import Session
 
 from app.face_recognition.recognizer import STATUS_UNKNOWN, FaceMatch
+from app.database.errors import safe_commit
 from app.models.detection import Detection
 from app.models.unknown_face import UnknownFace
 from app.utils.config import Settings
@@ -103,4 +104,4 @@ def log_matches(
         committed = True
 
     if committed:
-        db.commit()
+        safe_commit(db, "log detection matches")

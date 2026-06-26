@@ -3,19 +3,23 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.middleware.sessions import SessionMiddleware
 
+from app.api.exceptions import sqlalchemy_exception_handler
 from app.api.routes import auth, dashboard, health, monitoring, registration
 from app.database.connection import SessionLocal, init_db
 from app.services.auth_service import ensure_default_admin
 from app.services.recognition_service import initialize_recognition
 from app.utils.config import get_settings
+from app.utils.logging import setup_logging
 
 settings = get_settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    setup_logging()
     for folder in [settings.dataset_dir, settings.screenshot_dir, settings.log_dir, "database"]:
         os.makedirs(folder, exist_ok=True)
     init_db()
@@ -52,5 +56,7 @@ def create_app() -> FastAPI:
     app.include_router(dashboard.router)
     app.include_router(registration.router)
     app.include_router(monitoring.router)
+
+    app.add_exception_handler(SQLAlchemyError, sqlalchemy_exception_handler)
 
     return app

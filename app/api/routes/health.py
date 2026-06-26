@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
 from app.utils.config import get_settings
+from app.utils.logging import log_exception
 
 router = APIRouter(tags=["Health"])
 settings = get_settings()
@@ -15,7 +16,8 @@ def health_check(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
     except Exception as exc:
-        db_status = f"error: {exc}"
+        db_status = "error"
+        log_exception("database", "Health check database query failed", exc)
 
     return {
         "status": "ok" if db_status == "ok" else "degraded",

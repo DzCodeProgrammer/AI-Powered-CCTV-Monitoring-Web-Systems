@@ -11,7 +11,13 @@ from app.models.attendance import Attendance
 from app.models.detection import Detection
 from app.models.unknown_face import UnknownFace
 from app.models.user import User
-from app.services.dashboard_service import get_dashboard_stats, get_recent_activity
+from app.database.errors import run_db_operation
+from app.services.dashboard_service import (
+    AttendanceStats,
+    DashboardStats,
+    get_dashboard_stats,
+    get_recent_activity,
+)
 from app.utils.config import get_settings
 from app.utils.templates import templates
 
@@ -52,12 +58,29 @@ async def dashboard_home(request: Request, db: Session = Depends(get_db)):
     if isinstance(auth, RedirectResponse):
         return auth
 
-    stats = get_dashboard_stats(db)
-    recent_activity = get_recent_activity(db, limit=20)
+    stats = run_db_operation(
+        db,
+        "load dashboard stats",
+        lambda: get_dashboard_stats(db),
+        default=DashboardStats(
+            registered_users=0,
+            detections_today=0,
+            unknown_detections_today=0,
+            unknown_faces_total=0,
+            attendance=AttendanceStats(0, 0, 0, 0),
+        ),
+    )
+    recent_activity = run_db_operation(
+        db,
+        "load recent activity",
+        lambda: get_recent_activity(db, limit=20),
+        default=[],
+    ) or []
 
     context = _dashboard_context(request, auth, "dashboard")
     context["stats"] = stats
     context["recent_activity"] = recent_activity
+    context["db_error"] = request.query_params.get("error") == "server"
     return templates.TemplateResponse("dashboard/index.html", context)
 
 

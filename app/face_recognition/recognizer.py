@@ -6,7 +6,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-from deepface import DeepFace
+from app.utils.logging import log_exception
 
 from app.face_recognition.detector import FaceDetector
 from app.face_recognition.embeddings import (
@@ -54,7 +54,8 @@ class FaceRecognizer:
                 enforce_detection=False,
             )
             face_embedding = parse_embedding(vector)
-        except Exception:
+        except Exception as exc:
+            log_exception("face_recognition", "Face embedding failed during match", exc)
             return "Unknown", STATUS_UNKNOWN, 0.0, None
         finally:
             if tmp_path:

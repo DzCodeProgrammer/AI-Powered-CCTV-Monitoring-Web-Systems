@@ -1,9 +1,11 @@
 from collections.abc import Generator
 
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.utils.config import get_settings
+from app.utils.logging import log_exception
 
 settings = get_settings()
 
@@ -28,6 +30,10 @@ def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
+    except SQLAlchemyError as exc:
+        db.rollback()
+        log_exception("database", "Database session error", exc)
+        raise
     finally:
         db.close()
 

@@ -13,6 +13,10 @@
     </a>
 </div>
 
+{% if db_error %}
+<div class="alert alert-danger">A server error occurred. Details are logged in <code>logs/errors.log</code>.</div>
+{% endif %}
+
 <div class="row g-3">
     <div class="col-md-6 col-xl-3">
         <div class="card stat-card border-0 shadow-sm h-100">

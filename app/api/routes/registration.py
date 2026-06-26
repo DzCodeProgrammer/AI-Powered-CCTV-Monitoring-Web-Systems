@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
 from app.database.connection import get_db
+from app.utils.logging import log_exception
 from app.services.recognition_service import rebuild_embeddings
 from app.services.registration_service import RegistrationError, register_person
 from app.utils.config import get_settings
@@ -71,7 +72,8 @@ async def register_submit(
             context,
             status_code=status.HTTP_400_BAD_REQUEST,
         )
-    except Exception:
+    except Exception as exc:
+        log_exception("registration", "Registration failed", exc)
         context["error"] = "Registration failed. Please try again."
         return templates.TemplateResponse(
             "dashboard/register.html",

@@ -4,6 +4,21 @@ Production-style real-time CCTV monitoring with face detection, recognition, att
 
 **Repository:** [github.com/DzCodeProgrammer/AI-Powered-CCTV-Monitoring-Web-Systems](https://github.com/DzCodeProgrammer/AI-Powered-CCTV-Monitoring-Web-Systems)
 
+## Session 10 Status (Complete)
+
+Centralized error handling with file logging:
+
+| Area | Behavior |
+|------|----------|
+| Camera disconnect | Status overlay on stream, auto-reconnect every 3s, logged to `logs/errors.log` |
+| Database errors | Rollback + safe commits; dashboard falls back to empty stats |
+| Missing face images | Skipped during embedding rebuild with warning in logs |
+| All errors | Written to `logs/app.log` (INFO+) and `logs/errors.log` (ERROR+) |
+
+```powershell
+python scripts\verify_session10.py
+```
+
 ## Session 9 Status (Complete)
 
 Centralized configuration via `.env`:

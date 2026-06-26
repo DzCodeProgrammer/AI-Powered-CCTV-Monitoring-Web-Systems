@@ -11,6 +11,9 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.utils.config import Settings
+from app.utils.logging import get_logger, log_exception
+
+logger = get_logger("face_recognition")
 
 
 @dataclass
@@ -69,9 +72,11 @@ def build_embeddings_from_db(db: Session, settings: Settings) -> EmbeddingStore:
     ).all()
 
     entries: list[EmbeddingEntry] = []
+    missing_images: list[str] = []
     for user in users:
         image_path = Path(user.image_path)
         if not image_path.is_file():
+            missing_images.append(f"{user.full_name} (id={user.id}): {user.image_path}")
             continue
         try:
             vector = DeepFace.represent(
@@ -81,13 +86,29 @@ def build_embeddings_from_db(db: Session, settings: Settings) -> EmbeddingStore:
             )
             embedding = parse_embedding(vector)
             if embedding.size == 0:
+                logger.warning(
+                    "Empty embedding for user %s (id=%s)", user.full_name, user.id
+                )
                 continue
             entries.append(
                 EmbeddingEntry(user_id=user.id, name=user.full_name, embedding=embedding)
             )
             user.embedding_path = str(embeddings_cache_path(settings))
-        except Exception:
+        except Exception as exc:
+            log_exception(
+                "face_recognition",
+                f"Failed to build embedding for {user.full_name} (id={user.id})",
+                exc,
+            )
             continue
+
+    for entry in missing_images:
+        logger.warning("Missing face image: %s", entry)
+
+    if missing_images:
+        logger.warning(
+            "Skipped %s user(s) with missing face images", len(missing_images)
+        )
 
     db.commit()
     return EmbeddingStore(entries=entries)

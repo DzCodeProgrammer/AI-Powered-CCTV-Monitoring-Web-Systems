@@ -61,6 +61,12 @@ async def monitor_page(request: Request, db: Session = Depends(get_db)):
     camera_source = _active_camera_source(request)
     camera_mode = request.session.get("camera_mode", _default_camera_mode())
 
+    camera_connected = None
+    try:
+        camera_connected = _get_camera_manager(request).is_connected
+    except RuntimeError:
+        camera_connected = False
+
     return templates.TemplateResponse(
         "dashboard/monitor.html",
         {
@@ -82,6 +88,7 @@ async def monitor_page(request: Request, db: Session = Depends(get_db)):
             "attendance_interval": settings.attendance_interval,
             "rebuild_success": request.query_params.get("rebuilt") == "1",
             "camera_switched": request.query_params.get("camera") == "1",
+            "camera_connected": camera_connected,
         },
     )
 
@@ -120,8 +127,11 @@ async def switch_camera(
         request.session["webcam_index"] = source
 
     try:
-        CameraManager.switch_source(settings, get_recognizer(), source)
-    except (RuntimeError, ValueError):
+        manager = CameraManager.switch_source(settings, get_recognizer(), source)
+    except ValueError:
+        return RedirectResponse(url="/dashboard/monitor?error=camera", status_code=303)
+
+    if not manager.is_connected:
         return RedirectResponse(url="/dashboard/monitor?error=camera", status_code=303)
 
     return RedirectResponse(url="/dashboard/monitor?camera=1", status_code=303)
@@ -138,7 +148,7 @@ async def monitor_feed(request: Request, db: Session = Depends(get_db)):
 
     try:
         camera = _get_camera_manager(request)
-    except (RuntimeError, ValueError):
+    except RuntimeError:
         return StreamingResponse(
             iter([b""]),
             status_code=503,

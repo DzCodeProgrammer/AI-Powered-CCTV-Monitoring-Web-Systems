@@ -34,7 +34,10 @@
 <div class="alert alert-danger">Dahua camera not configured. Set DAHUA_HOST and credentials in .env</div>
 {% endif %}
 {% if request.query_params.get('error') == 'camera' %}
-<div class="alert alert-danger">Could not open the selected camera source.</div>
+<div class="alert alert-danger">Could not open the selected camera source. Check logs/errors.log for details.</div>
+{% endif %}
+{% if camera_connected is sameas false %}
+<div class="alert alert-warning">Camera is disconnected. The stream will show a status overlay and auto-reconnect.</div>
 {% endif %}
 
 <div class="row g-4">

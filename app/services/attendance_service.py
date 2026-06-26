@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.database.errors import safe_commit
 from app.face_recognition.recognizer import STATUS_RECOGNIZED, FaceMatch
 from app.models.attendance import Attendance
 from app.utils.config import Settings
@@ -59,8 +60,8 @@ def log_attendance(
         saved.append(record)
 
     if saved:
-        db.commit()
-        for record in saved:
-            db.refresh(record)
+        if safe_commit(db, "log attendance"):
+            for record in saved:
+                db.refresh(record)
 
     return saved
