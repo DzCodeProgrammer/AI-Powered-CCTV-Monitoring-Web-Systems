@@ -1,80 +1,58 @@
 {% extends "base.html" %}
 
-{% block title %}{% block page_title %}Dashboard{% endblock %} — {{ app_name }}{% endblock %}
+{% block title %}{% block page_title %}Dashboard{% endblock %} - {{ app_name }}{% endblock %}
 {% block body_class %}dashboard-page{% endblock %}
 
 {% block body %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/dashboard">
-            <i class="bi bi-camera-video-fill me-2"></i>{{ app_name }}
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="topNav">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="/dashboard">
-                        Overview
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'detections' %}active{% endif %}" href="/dashboard/detections">
-                        Detections
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'users' %}active{% endif %}" href="/dashboard/users">
-                        Users
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'register' %}active{% endif %}" href="/dashboard/register">
-                        Register
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'model_settings' %}active{% endif %}" href="/dashboard/model-settings">
-                        Model
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'monitor' %}active{% endif %}" href="/dashboard/monitor">
-                        Monitor
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'attendance' %}active{% endif %}" href="/dashboard/attendance">
-                        Attendance
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'user_statistics' %}active{% endif %}" href="/dashboard/user-statistics">
-                        User Stats
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'unknown_faces' %}active{% endif %}" href="/dashboard/unknown-faces">
-                        Unknown
-                    </a>
-                </li>
-            </ul>
+<div class="dashboard-shell">
+    <aside class="dashboard-sidebar d-none d-lg-flex flex-column">
+        {% include "dashboard/_sidebar_nav.html" %}
+    </aside>
+
+    <div class="dashboard-main">
+        <nav class="mobile-topbar navbar navbar-dark d-lg-none">
+            <div class="container-fluid">
+                <a class="navbar-brand d-flex align-items-center gap-2" href="/dashboard">
+                    <span class="brand-icon"><i class="bi bi-camera-video-fill"></i></span>
+                    <span>{{ app_name }}</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-label="Open navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="offcanvas offcanvas-start dashboard-offcanvas d-lg-none" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
+            <div class="offcanvas-header">
+                <h2 class="offcanvas-title h5" id="mobileNavLabel">{{ app_name }}</h2>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body p-0 d-flex flex-column">
+                {% include "dashboard/_sidebar_nav.html" %}
+            </div>
+        </div>
+
+        <header class="dashboard-topbar d-none d-lg-flex align-items-center justify-content-between">
+            <div>
+                <p class="eyebrow mb-1">Smart CCTV Control Center</p>
+                <h1 class="topbar-title mb-0">{% block topbar_title %}{{ self.page_title() }}{% endblock %}</h1>
+            </div>
             <div class="d-flex align-items-center gap-3">
-                <span class="text-light small">
-                    <i class="bi bi-person-circle me-1"></i>{{ admin.username }}
-                </span>
+                <div class="topbar-admin">
+                    <i class="bi bi-person-circle"></i>
+                    <span>{{ admin.username }}</span>
+                </div>
                 <form method="post" action="/logout" class="mb-0">
-                    <button type="submit" class="btn btn-outline-light btn-sm">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
                         <i class="bi bi-box-arrow-right me-1"></i>Logout
                     </button>
                 </form>
             </div>
-        </div>
-    </div>
-</nav>
+        </header>
 
-<main class="container-fluid py-4 px-3 px-lg-4">
-    {% block dashboard_content %}{% endblock %}
-</main>
+        <main class="dashboard-content">
+            {% block dashboard_content %}{% endblock %}
+        </main>
+    </div>
+</div>
 {% endblock %}

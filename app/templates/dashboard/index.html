@@ -55,32 +55,52 @@
     <div class="col-md-6 col-xl-3">
         <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body">
-                <p class="text-muted small mb-1">Registered Users</p>
-                <h2 class="h3 mb-0">{{ stats.registered_users }}</h2>
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <p class="text-muted small mb-1">Registered Users</p>
+                        <h2 class="h3 mb-0">{{ stats.registered_users }}</h2>
+                    </div>
+                    <span class="stat-icon"><i class="bi bi-people-fill"></i></span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
         <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body">
-                <p class="text-muted small mb-1">Today's Detections</p>
-                <h2 class="h3 mb-0">{{ stats.detections_today }}</h2>
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <p class="text-muted small mb-1">Today's Detections</p>
+                        <h2 class="h3 mb-0">{{ stats.detections_today }}</h2>
+                    </div>
+                    <span class="stat-icon bg-success"><i class="bi bi-eye-fill"></i></span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
         <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body">
-                <p class="text-muted small mb-1">Unknown Today</p>
-                <h2 class="h3 mb-0 text-danger">{{ stats.unknown_detections_today }}</h2>
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <p class="text-muted small mb-1">Unknown Today</p>
+                        <h2 class="h3 mb-0 text-danger">{{ stats.unknown_detections_today }}</h2>
+                    </div>
+                    <span class="stat-icon bg-danger"><i class="bi bi-person-exclamation"></i></span>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-6 col-xl-3">
         <div class="card stat-card border-0 shadow-sm h-100">
             <div class="card-body">
-                <p class="text-muted small mb-1">Unknown Gallery</p>
-                <h2 class="h3 mb-0">{{ stats.unknown_faces_total }}</h2>
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                        <p class="text-muted small mb-1">Unknown Gallery</p>
+                        <h2 class="h3 mb-0">{{ stats.unknown_faces_total }}</h2>
+                    </div>
+                    <span class="stat-icon bg-warning text-dark"><i class="bi bi-images"></i></span>
+                </div>
             </div>
         </div>
     </div>
