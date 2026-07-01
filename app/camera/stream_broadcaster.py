@@ -117,9 +117,7 @@ class LiveStreamBroadcaster:
     def get_latest_frame(self) -> np.ndarray | None:
         """Latest annotated BGR frame for native desktop UI (no JPEG round-trip)."""
         with self._frame_lock:
-            if self._latest_frame is None:
-                return None
-            return self._latest_frame.copy()
+            return self._latest_frame
 
     def _publish_frame(self, annotated: np.ndarray, jpeg: bytes | None) -> None:
         with self._frame_lock:
@@ -136,8 +134,10 @@ class LiveStreamBroadcaster:
         camera_source: str,
     ) -> None:
         tick = 0
+        settings_tick = 0
         quality = int(settings.performance_profile["jpeg_quality"])
         encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+        desktop_mode = settings.desktop_mode
 
         try:
             camera = CameraManager.get_instance(settings, recognizer, camera_source)
@@ -152,10 +152,13 @@ class LiveStreamBroadcaster:
                 break
 
             try:
-                get_settings.cache_clear()
-                settings = get_settings()
-                quality = int(settings.performance_profile["jpeg_quality"])
-                encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+                settings_tick += 1
+                if settings_tick % 120 == 0:
+                    get_settings.cache_clear()
+                    settings = get_settings()
+                    quality = int(settings.performance_profile["jpeg_quality"])
+                    encode_params = [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+                    desktop_mode = settings.desktop_mode
 
                 frame = camera.read_frame()
                 self._connected = camera.is_connected
@@ -164,6 +167,8 @@ class LiveStreamBroadcaster:
                 if frame is None:
                     annotated = camera.status_frame()
                 else:
+                    if desktop_mode:
+                        self._publish_frame(recognizer.preview_stream_frame(frame), None)
                     tick += 1
                     run_ai = tick % AI_TICK_EVERY == 0
                     annotated, _ = recognizer.annotate_stream_frame(frame, run_ai=run_ai)
@@ -175,7 +180,7 @@ class LiveStreamBroadcaster:
                         except Exception as exc:
                             log_exception("stream", "Recognition callback failed", exc)
 
-                if settings.desktop_mode:
+                if desktop_mode:
                     self._publish_frame(annotated, None)
                 else:
                     success, buffer = cv2.imencode(".jpg", annotated, encode_params)
@@ -192,7 +197,8 @@ class LiveStreamBroadcaster:
                 time.sleep(0.2)
                 continue
 
-            time.sleep(0.001)
+            if not desktop_mode:
+                time.sleep(0.001)
 
     def iter_mjpeg(self) -> iter:
         """Yield multipart chunks; new clients get the latest frame immediately."""

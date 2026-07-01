@@ -10,6 +10,7 @@ import numpy as np
 from deepface import DeepFace
 
 from app.face_recognition.detector import FaceDetector
+from app.face_recognition.pipeline_lock import AI_PIPELINE_LOCK
 from app.face_recognition.embeddings import (
     EmbeddingStore,
     cosine_distance,
@@ -152,12 +153,13 @@ class FaceRecognizer:
                 )
 
             self._deepface_calls = getattr(self, "_deepface_calls", 0) + 1
-            vector = DeepFace.represent(
-                img_path=rgb,
-                model_name=self.settings.face_model,
-                enforce_detection=False,
-                detector_backend="skip",
-            )
+            with AI_PIPELINE_LOCK:
+                vector = DeepFace.represent(
+                    img_path=rgb,
+                    model_name=self.settings.face_model,
+                    enforce_detection=False,
+                    detector_backend="skip",
+                )
             face_embedding = parse_embedding(vector)
         except Exception as exc:
             log_exception("face_recognition", "Face embedding failed during match", exc)
@@ -350,6 +352,12 @@ class FaceRecognizer:
         draw_face_boxes(annotated, matches)
         return annotated, matches
 
+    def preview_stream_frame(self, frame: np.ndarray) -> np.ndarray:
+        """Resize + last overlays only — keeps live video smooth while AI catches up."""
+        self._collect_recognition_results()
+        display, _ = resize_frame(frame, int(self._perf["stream_max_width"]))
+        return draw_face_boxes(display, self._tracks_to_matches())
+
     def annotate_stream_frame(
         self,
         frame: np.ndarray,
@@ -372,7 +380,7 @@ class FaceRecognizer:
             detect_every = max(1, frame_skip * int(perf["detection_frame_skip"]))
             if not self._tracks or self._frame_index % detect_every == 0:
                 proc_frame, proc_scale = resize_frame(frame, int(perf["process_max_width"]))
-                bboxes = self.detector.detect(proc_frame)
+                bboxes = self.detector.detect_stream(proc_frame)
                 full_bboxes = [scale_bbox(b, proc_scale) for b in bboxes]
                 display_bboxes = [scale_bbox(b, 1 / display_scale) for b in full_bboxes]
                 self._update_tracks(display_bboxes)
@@ -383,18 +391,6 @@ class FaceRecognizer:
         matches = self._tracks_to_matches()
         self._last_matches = matches
         annotated = draw_face_boxes(display, matches)
-
-        if run_ai and not matches:
-            cv2.putText(
-                annotated,
-                "No face detected - face the camera, improve lighting",
-                (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.55,
-                (0, 255, 255),
-                2,
-                cv2.LINE_AA,
-            )
 
         return annotated, matches
 

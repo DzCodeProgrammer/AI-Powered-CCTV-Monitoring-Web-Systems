@@ -15,6 +15,7 @@ from app.face_recognition.recognizer import STATUS_DETECTING, FaceMatch
 from app.integrations.dahua.subscriber import run_subscriber_with_reconnect
 from app.services.attendance_service import log_attendance
 from app.services.detection_service import log_matches
+from app.services.monitoring_service import is_monitoring_active
 from app.services.recognition_service import get_recognizer
 from app.utils.config import Settings, get_settings
 from app.utils.logging import get_logger
@@ -95,6 +96,10 @@ async def stop_event_capture() -> None:
 
 
 async def _on_snapshot(jpeg_bytes: bytes, metadata: dict[str, str]) -> None:
+    # Avoid YuNet/DeepFace lock contention while live monitor is running.
+    if is_monitoring_active():
+        return
+
     async with _processing_lock:
         _status.connected = True
         _status.last_event_at = datetime.now(timezone.utc)
@@ -116,7 +121,13 @@ async def _on_snapshot(jpeg_bytes: bytes, metadata: dict[str, str]) -> None:
             _status.last_error = "Recognition not initialized"
             return
 
-        annotated, matches = recognizer.process_snapshot(frame)
+        try:
+            annotated, matches = recognizer.process_snapshot(frame)
+        except Exception as exc:
+            _status.last_error = f"Event recognition failed: {exc}"
+            logger.warning("Dahua event snapshot handler failed: %s", exc)
+            return
+
         loggable = [m for m in matches if m.status != STATUS_DETECTING]
         if not loggable:
             logger.debug("Dahua event: no faces recognized in snapshot")
@@ -144,6 +155,10 @@ async def _on_snapshot(jpeg_bytes: bytes, metadata: dict[str, str]) -> None:
 
 
 def _decode_jpeg(data: bytes) -> np.ndarray | None:
+    if not data:
+        return None
     arr = np.frombuffer(data, dtype=np.uint8)
     frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-    return frame
+    if frame is None or frame.size == 0:
+        return None
+    return np.ascontiguousarray(frame)

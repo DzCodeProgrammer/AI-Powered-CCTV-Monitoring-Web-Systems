@@ -52,6 +52,38 @@ def _ensure_single_instance(app: QApplication) -> bool:
     return True
 
 
+def _install_crash_handlers(app: QApplication) -> None:
+    """Log uncaught errors instead of silently killing the desktop process."""
+    import traceback
+
+    from PySide6.QtCore import QtMsgType, qInstallMessageHandler
+
+    from app.utils.logging import get_logger
+
+    log = get_logger("desktop")
+
+    def _excepthook(exc_type, exc, tb) -> None:
+        log.error("Uncaught exception:\n%s", "".join(traceback.format_exception(exc_type, exc, tb)))
+        QMessageBox.critical(
+            None,
+            "Smart CCTV — Error",
+            f"An error occurred but the app will keep running.\n\n{exc}",
+        )
+
+    sys.excepthook = _excepthook
+
+    def _qt_handler(msg_type, context, message) -> None:  # noqa: ARG001
+        if msg_type in (QtMsgType.QtCriticalMsg, QtMsgType.QtFatalMsg):
+            log.error("Qt %s: %s", msg_type, message)
+
+    try:
+        qInstallMessageHandler(_qt_handler)
+    except Exception:
+        pass
+
+    app.setQuitOnLastWindowClosed(True)
+
+
 def main() -> int:
     _apply_desktop_env_defaults()
 
@@ -65,6 +97,7 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Smart CCTV Desktop")
     app.setOrganizationName("SmartCCTV")
+    _install_crash_handlers(app)
 
     if not _ensure_single_instance(app):
         return 1

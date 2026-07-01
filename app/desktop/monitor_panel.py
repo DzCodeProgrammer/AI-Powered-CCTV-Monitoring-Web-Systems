@@ -119,6 +119,12 @@ class MonitorPanel(QWidget):
             self.window()._tray.refresh()  # type: ignore[attr-defined]
 
     def _refresh_frame(self) -> None:
+        try:
+            self._refresh_frame_impl()
+        except Exception as exc:
+            self._status.setText(f"Status: display error — {exc}")
+
+    def _refresh_frame_impl(self) -> None:
         broadcaster = LiveStreamBroadcaster.get()
         frame = broadcaster.get_latest_frame()
         if frame is not None:

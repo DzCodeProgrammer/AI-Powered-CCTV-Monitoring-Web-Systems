@@ -173,7 +173,7 @@ class CameraManager:
         if self._capture is None:
             return None
         if flush_buffer:
-            for _ in range(20):
+            for _ in range(8):
                 if not self._capture.grab():
                     break
             success, frame = self._capture.retrieve()

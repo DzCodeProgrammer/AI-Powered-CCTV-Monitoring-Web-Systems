@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from PySide6.QtWidgets import (
+    QCheckBox,
     QDoubleSpinBox,
     QFormLayout,
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QMessageBox,
@@ -15,7 +17,11 @@ from PySide6.QtWidgets import (
 )
 
 from app.database.connection import SessionLocal
-from app.services.model_settings_service import apply_laptop_8gb_preset, save_model_settings
+from app.services.model_settings_service import (
+    apply_laptop_8gb_preset,
+    save_model_settings,
+    save_notification_settings,
+)
 from app.services.recognition_service import get_embedding_store, rebuild_embeddings
 from app.utils.config import get_settings
 
@@ -68,6 +74,15 @@ class ModelSettingsPanel(QWidget):
 
         self._registered = QLabel(self._registered_text())
 
+        self._wa_enabled = QCheckBox("Enable WhatsApp notifications (Fonnte)")
+        self._wa_enabled.setChecked(settings.wa_notify_enabled)
+
+        self._wa_unknown = QCheckBox("Alert on unknown faces")
+        self._wa_unknown.setChecked(settings.wa_notify_unknown)
+
+        self._wa_attendance = QCheckBox("Send attendance to registered users")
+        self._wa_attendance.setChecked(settings.wa_notify_attendance)
+
         form = QFormLayout()
         form.addRow("Recognition threshold", self._threshold)
         form.addRow("Recognition margin", self._margin)
@@ -77,8 +92,21 @@ class ModelSettingsPanel(QWidget):
         form.addRow("Max faces per frame", self._max_faces)
         form.addRow("Registered persons", self._registered)
 
+        wa_group = QGroupBox("WhatsApp notifications")
+        wa_layout = QVBoxLayout(wa_group)
+        wa_layout.addWidget(self._wa_enabled)
+        wa_layout.addWidget(self._wa_unknown)
+        wa_layout.addWidget(self._wa_attendance)
+        wa_hint = QLabel("Token & phone numbers stay in .env (WA_API_TOKEN, WA_ADMIN_PHONES).")
+        wa_hint.setStyleSheet("color: #666; font-size: 11px;")
+        wa_hint.setWordWrap(True)
+        wa_layout.addWidget(wa_hint)
+
         save_btn = QPushButton("Save settings")
         save_btn.clicked.connect(self._save)
+
+        save_wa_btn = QPushButton("Save WhatsApp settings")
+        save_wa_btn.clicked.connect(self._save_wa)
 
         preset_btn = QPushButton("Apply laptop 8GB preset")
         preset_btn.clicked.connect(self._apply_preset)
@@ -88,6 +116,7 @@ class ModelSettingsPanel(QWidget):
 
         actions = QHBoxLayout()
         actions.addWidget(save_btn)
+        actions.addWidget(save_wa_btn)
         actions.addWidget(preset_btn)
         actions.addStretch()
         actions.addWidget(rebuild_btn)
@@ -96,6 +125,7 @@ class ModelSettingsPanel(QWidget):
         layout.addWidget(header)
         layout.addWidget(hint)
         layout.addLayout(form)
+        layout.addWidget(wa_group)
         layout.addLayout(actions)
         layout.addStretch()
 
@@ -123,6 +153,33 @@ class ModelSettingsPanel(QWidget):
 
         self._registered.setText(self._registered_text())
         QMessageBox.information(self, "Model settings", "Settings saved and applied.")
+
+    def _save_wa(self) -> None:
+        settings = get_settings()
+        try:
+            save_notification_settings(
+                wa_notify_enabled=self._wa_enabled.isChecked(),
+                wa_api_token=settings.wa_api_token,
+                wa_admin_phones=settings.wa_admin_phones,
+                wa_notify_unknown=self._wa_unknown.isChecked(),
+                wa_notify_attendance=self._wa_attendance.isChecked(),
+            )
+        except ValueError as exc:
+            QMessageBox.warning(self, "WhatsApp settings", str(exc))
+            return
+        except Exception as exc:
+            QMessageBox.critical(self, "WhatsApp settings", f"Save failed:\n{exc}")
+            return
+
+        get_settings.cache_clear()
+        refreshed = get_settings()
+        self._wa_enabled.setChecked(refreshed.wa_notify_enabled)
+        QMessageBox.information(
+            self,
+            "WhatsApp settings",
+            "Saved. Notifications are "
+            + ("enabled." if refreshed.wa_notify_enabled else "disabled."),
+        )
 
     def _apply_preset(self) -> None:
         try:

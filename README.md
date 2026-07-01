@@ -11,10 +11,22 @@ Real-time CCTV monitoring with **face detection**, **face recognition**, **atten
 ```powershell
 pip install -r requirements.txt -r requirements-desktop.txt
 copy .env.example .env
+# Edit .env: MySQL, Dahua camera, admin password
 python desktop_main.py
 ```
 
-Or `run_desktop.bat` · See **[Desktop Guide](docs/DESKTOP.md)** · Build `.exe`: `pyinstaller smart_cctv_desktop.spec`
+Or `run_desktop.bat` · See **[Desktop Guide](docs/DESKTOP.md)** · Build `.exe`: `scripts\build_desktop.bat`
+
+**Desktop tabs:** Live Monitor · Attendance (+ Excel export) · Register · Unknown Faces · Model Settings · system tray (Start/Stop).
+
+**Recommended `.env` for desktop laptop:**
+
+```env
+CCTV_MODE=event          # Dahua events in background; live monitor on-demand
+RECOGNITION_INTERVAL=1   # Low-latency recognition
+WA_NOTIFY_ENABLED=false  # Disable WhatsApp until Fonnte is configured
+DESKTOP_MODE=true
+```
 
 ---
 
@@ -22,15 +34,16 @@ Or `run_desktop.bat` · See **[Desktop Guide](docs/DESKTOP.md)** · Build `.exe`
 
 - **Native desktop app** (PySide6) — register, model settings, unknown faces, Excel export, system tray
 - Live stream — webcam, RTSP, or Dahua IP CCTV (+ event capture; default `event` mode on desktop)
-- YuNet + Haar face detection with colored bounding boxes
+- YuNet + Haar face detection with colored bounding boxes (thread-safe pipeline for stream + events)
 - DeepFace (Facenet512) recognition + model settings UI
 - Attendance logging with duplicate prevention
-- **WhatsApp notifications** (Fonnte) — unknown face + absensi masuk/pulang
+- **WhatsApp notifications** (Fonnte, optional) — disable via `WA_NOTIFY_ENABLED=false` or Model Settings tab
 - **Export attendance to Excel** (`.xlsx`)
-- Multi-photo registration, user statistics, monitoring schedule
+- Multi-photo registration, monitoring schedule
 - Admin session authentication
-- Optimized for i5 Gen 4 / 8 GB RAM
+- Optimized for i5 Gen 4 / 8 GB RAM (low-latency presets)
 - Centralized `.env` configuration + file logging
+- Single-instance desktop — prevents two DeepFace processes
 
 ---
 
@@ -96,11 +109,12 @@ See [Hosting Guide](docs/HOSTING.md) · double-click `run_host.bat`
 | Layer | Technology |
 |-------|------------|
 | Backend | Python 3.11, FastAPI, Uvicorn |
+| Desktop | PySide6 (native UI) |
 | Database | MySQL 8.x (SQLite fallback) |
 | ORM | SQLAlchemy 2.x |
 | Face AI | OpenCV YuNet/Haar, DeepFace Facenet |
 | Export | openpyxl |
-| Frontend | Jinja2, Bootstrap 5 |
+| Frontend | Jinja2, Bootstrap 5 (web mode) |
 
 ---
 
@@ -118,9 +132,17 @@ See **[docs/OPERATIONS.md](docs/OPERATIONS.md)** for:
 
 Tune these from **Dashboard → Model settings → Operations** or `.env`.
 
-### WhatsApp & camera stream
+### WhatsApp (optional)
 
-See **[docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md)** for Fonnte setup (unknown face + attendance alerts) and **DAHUA_SUBTYPE=1** substream.
+Disabled by default (`WA_NOTIFY_ENABLED=false`). Enable in **Desktop → Model Settings → WhatsApp** or web **Model settings**, after setting `WA_API_TOKEN` and `WA_ADMIN_PHONES` in `.env`. See **[docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md)**.
+
+### Camera stream
+
+Use **DAHUA_SUBTYPE=1** substream on low-end laptops. For local testing without CCTV, pick **Webcam** in Live Monitor.
+
+### Desktop app closes during monitoring?
+
+Usually caused by OpenCV YuNet + Dahua events running at the same time (fixed with AI pipeline lock). If issues persist, set `FACE_DETECTOR=haar` in `.env` and restart. Check `logs/errors.log`.
 
 ---
 
@@ -145,7 +167,8 @@ smart-cctv/
 ├── database/            # Embeddings cache (+ SQLite if used)
 ├── datasets/            # Registered face photos
 ├── logs/                # app.log, errors.log
-├── main.py              # Entry point
+├── main.py              # Web entry point
+├── desktop_main.py      # Desktop entry point (recommended)
 ├── requirements.txt     # Pinned dependencies
 ├── pyproject.toml       # Ruff / PEP8 config
 └── docker-compose.yml   # MySQL 8.0

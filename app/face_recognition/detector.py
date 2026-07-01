@@ -7,6 +7,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from app.face_recognition.pipeline_lock import AI_PIPELINE_LOCK
 from app.utils.config import Settings
 from app.utils.logging import get_logger
 
@@ -113,12 +114,29 @@ class FaceDetector:
         if self._yunet is None:
             return []
 
-        height, width = frame.shape[:2]
-        if self._yunet_input != (width, height):
-            self._yunet.setInputSize((width, height))
-            self._yunet_input = (width, height)
+        if frame.ndim != 3 or frame.shape[2] != 3:
+            return []
 
-        _, faces = self._yunet.detect(frame)
+        if frame.dtype != np.uint8:
+            frame = frame.astype(np.uint8)
+        if not frame.flags["C_CONTIGUOUS"]:
+            frame = np.ascontiguousarray(frame)
+
+        height, width = frame.shape[:2]
+        if width < 1 or height < 1:
+            return []
+
+        try:
+            with AI_PIPELINE_LOCK:
+                if self._yunet_input != (width, height):
+                    self._yunet.setInputSize((width, height))
+                    self._yunet_input = (width, height)
+
+                _, faces = self._yunet.detect(frame)
+        except cv2.error as exc:
+            logger.warning("YuNet detect failed, falling back to Haar: %s", exc)
+            return []
+
         if faces is None or len(faces) == 0:
             return []
 
@@ -187,6 +205,13 @@ class FaceDetector:
         if frame is None or frame.size == 0:
             return []
 
+        try:
+            return self._detect_impl(frame)
+        except cv2.error as exc:
+            logger.warning("Face detection failed: %s", exc)
+            return []
+
+    def _detect_impl(self, frame: np.ndarray) -> list[tuple[int, int, int, int]]:
         all_boxes: list[tuple[int, int, int, int]] = []
 
         if self._backend in {"yunet", "auto"} and self._yunet is not None:
@@ -201,3 +226,22 @@ class FaceDetector:
                 return haar_boxes[:5]
 
         return self._merge_boxes(all_boxes)[:5]
+
+    def detect_stream(self, frame: np.ndarray) -> list[tuple[int, int, int, int]]:
+        """Fast Haar-only path for live video — no YuNet, no lock contention."""
+        if frame is None or frame.size == 0:
+            return []
+        try:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray = cv2.GaussianBlur(gray, (3, 3), 0)
+            faces = self._cascade.detectMultiScale(
+                gray,
+                scaleFactor=1.1,
+                minNeighbors=3,
+                minSize=(self._min_size, self._min_size),
+                flags=cv2.CASCADE_SCALE_IMAGE,
+            )
+            return [(int(x), int(y), int(w), int(h)) for x, y, w, h in faces][:5]
+        except cv2.error as exc:
+            logger.warning("Stream face detection failed: %s", exc)
+            return []
